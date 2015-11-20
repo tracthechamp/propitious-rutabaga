@@ -17,6 +17,12 @@ Sprite monster;
 Sprite monsters[][] = new Sprite[monsterCols][monsterRows];
 boolean cheat = false;
 int points = 0;
+Sprite flyingMonster;
+int timeToAdd = -1;
+int DELAY = 2000;
+double fmRightAngle = 0.3490; // 20 degrees
+double fmLeftAngle = 2.79253; // 160 degrees
+double fmSpeed = 150;
 
 KeyboardController kbController = new KeyboardController(this);
 StopWatch stopWatch = new StopWatch();
@@ -32,6 +38,7 @@ public void setup()
   buildSprites();
   resetMonsters();
   registerMethod("pre", this);
+  timeToAdd = millis();
 }
 
 void buildSprites()
@@ -101,6 +108,16 @@ void pre()
   S4P.updateSprites(stopWatch.getElapsedTime());
   moveMonsters();
   processCollisions();
+  if ((flyingMonster == null || flyingMonster.isDead()) && millis() > (timeToAdd + DELAY)) {
+    flyingMonster = pickNonDead();
+    if (flyingMonster == null) {
+      resetMonsters();
+    } else {
+      flyingMonster.setSpeed(fmSpeed, fmRightAngle);
+      flyingMonster.setDomain(0, 0, width, height+100, Sprite.REBOUND);
+      timeToAdd = millis();
+    }
+  }
 }
 
 void moveMonsters() 
@@ -113,7 +130,7 @@ void moveMonsters()
     for(int idy = 0; idy<monsterRows; idy++)
     {
       Sprite monster = monsters[idx][idy];
-      if (!monster.isDead())
+      if (!monster.isDead() && monster != flyingMonster)
       {
         monster.setXY(monster.getX()+mmStep, monster.getY());
       }
@@ -172,36 +189,36 @@ void processCollisions() {
        rocket.setDead(true);
      }
 
-     outerloop1:
-     for (int idx = 0; idx < monsterCols; idx++)
-     {
-       for (int idy = 0; idy < monsterRows; idy++)
-       {
-         monster = monsters[idx][idy];
-         if (!monster.isDead() && rocket.cc_collision(monster))   
-         {
-           points += pointsPerKill;
-           monster.setDead(true);
-           rocket.setDead(true);
-           break outerloop1;
-         }
-       }
-     }
-     
-     boolean alldead = true;
-     outerloop2:
-     for (Sprite[] row : monsters) {
-       for (Sprite monster : row) {
-         if (! monster.isDead()) {
-           alldead = false;
-           break outerloop2;
-         }
-       }
-     }
-     if (alldead) {
-       points += pointsPerBoard;
-       resetMonsters();
-     }
-  
+    outerloop1:
+    for (int idx = 0; idx < monsterCols; idx++)
+    {
+      for (int idy = 0; idy < monsterRows; idy++)
+      {
+        monster = monsters[idx][idy];
+        if (!monster.isDead() && rocket.cc_collision(monster))   
+        {
+          points += pointsPerKill;
+          monster.setDead(true);
+          rocket.setDead(true);
+          break outerloop1;
+        }
+      }
+    }
   }
+  // if flying monster is off screen
+  if(flyingMonster != null && !flyingMonster.isOnScreem()) {
+    flyingMonster.setDead(true);
+    flyingMonster = null;
+  }
+}
+
+Sprite pickNonDead() {
+  for (int idy = monsterRows - 1; idy >= 0; idy--) {
+    for (int idx = monsterCols - 1; idx >= 0; idx--) {
+      if (! monsters[idx][idy].isDead()) {
+        return monsters[idx][idy];
+      }
+    }
+  }
+  return null;
 }
