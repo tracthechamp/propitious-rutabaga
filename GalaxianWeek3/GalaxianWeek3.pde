@@ -23,7 +23,8 @@ int DELAY = 2000;
 double fmRightAngle = 0.3490; // 20 degrees
 double fmLeftAngle = 2.79253; // 160 degrees
 double fmSpeed = 150;
-
+int difficulty = 150;
+int timer = 0;
 KeyboardController kbController = new KeyboardController(this);
 StopWatch stopWatch = new StopWatch();
 
@@ -104,6 +105,7 @@ void resetMonsters()
 
 void pre()
 {
+  timer--;
   checkKeys();
   S4P.updateSprites(stopWatch.getElapsedTime());
   moveMonsters();
@@ -111,20 +113,32 @@ void pre()
   if ((flyingMonster == null || flyingMonster.isDead()) && millis() > (timeToAdd + DELAY)) {
     flyingMonster = pickNonDead();
     if (flyingMonster == null) {
+      buildMonsterGrid();
       resetMonsters();
+      timeToAdd = millis();
     } else {
-      flyingMonster.setSpeed(fmSpeed, fmRightAngle);
+      flyingMonster.setSpeed(fmSpeed, SetRightOrLeft());
       flyingMonster.setDomain(0, 0, width, height+100, Sprite.REBOUND);
       timeToAdd = millis();
     }
   }
 }
 
+double SetRightOrLeft()
+{
+  double direction;
+  if(int (random(2)) ==1)
+    direction = fmRightAngle;
+  else
+    direction = fmLeftAngle;
+  return direction;
+}
+
 void moveMonsters() 
 {
   if((++mmCounter % 100) == 0)
   mmStep *= -1;
-  
+
   for(int idx = 0; idx<monsterCols; idx++)
   {
     for(int idy = 0; idy<monsterRows; idy++)
@@ -136,24 +150,24 @@ void moveMonsters()
       }
     }
   }
+  
+  if(flyingMonster != null)
+  {
+    if(int(random(difficulty))== 1)
+    {
+     //Changes Speed. Change Random values either higher or lower as needed.
+     flyingMonster.setSpeed(flyingMonster.getSpeed() +random(-25,25));
+      
+     //Changes direction.
+      if(flyingMonster.getDirection() == fmRightAngle)
+        flyingMonster.setDirection(fmLeftAngle);
+      else
+        flyingMonster.setDirection(fmRightAngle);
+    }
+  }
 }
 void fireRocket() {
   if (rocket.isDead()) {
-    if (cheat) {
-      rocket.setXY(ship.getX(), ship.getY() - 10);
-      rocket.setVelXY(0.0f, -1000.0f);
-      rocket.setDead(false);
-      outerloop:
-      for (Sprite[] row : monsters) {
-        for (Sprite monster : row) {
-          if (! monster.isDead()) {
-            monster.setDead(true);
-            break outerloop;
-          }
-        }
-      }
-      return;
-    }
     sound.playPop();
     rocket.setXY(ship.getX(), ship.getY() - 10);
     rocket.setVelXY(0.0f, -300.0f);
@@ -174,6 +188,14 @@ void checkKeys()
       }
       if (kbController.spaceBtn.pressed()) {
         fireRocket();
+      }
+      if (kbController.upArrow.pressed()) {
+        if (timer < 0) {
+          if (pickNonDead() != null) {
+            pickNonDead().setDead(true);
+            timer = 5;
+          }
+        }
       }
   }
 }
