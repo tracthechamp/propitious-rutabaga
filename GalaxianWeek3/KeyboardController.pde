@@ -6,7 +6,7 @@ class KeyboardController {
 
   ControlIO controllIO;
   ControlDevice keyboard;
-  ControlButton spaceBtn, leftArrow, rightArrow, downArrow;
+  ControlButton spaceBtn, leftArrow, rightArrow, downArrow, upArrow;
 
   KeyboardController(PApplet applet) {
     controllIO = ControlIO.getInstance(applet);
@@ -15,6 +15,7 @@ class KeyboardController {
     leftArrow = keyboard.getButton("Left");   
     rightArrow = keyboard.getButton("Right");
     downArrow = keyboard.getButton("Down");
+    upArrow = keyboard.getButton("Up");
   }
 
   boolean isDown() {
