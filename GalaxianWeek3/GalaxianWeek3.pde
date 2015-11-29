@@ -29,6 +29,7 @@ KeyboardController kbController = new KeyboardController(this);
 StopWatch stopWatch = new StopWatch();
 
 SoundPlayer sound;
+SoundPlayer soundE;
 
 public void setup()
 {
@@ -205,6 +206,12 @@ void draw() {
   text(points + " pts.", 10, 10);
 }
 
+void explodingShip() {
+    PImage img;
+    img = loadImage("explosion_strip16.png");
+    soundE.playExplosion();  
+}
+
 void processCollisions() {
   if (! rocket.isDead()) {
      if (! rocket.isOnScreem()) {
@@ -224,6 +231,14 @@ void processCollisions() {
           rocket.setDead(true);
           break outerloop1;
         }
+        else if (!monster.isDead() && ship.cc_collision(monster))
+        {
+           monster.setDead(true);
+           ship.setDead(true);
+           explodingShip();
+           break outerloop1;
+        }
+
       }
     }
   }
